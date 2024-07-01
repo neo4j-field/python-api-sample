@@ -4,6 +4,7 @@ Classes for representing music data, from the API point of view.
 It provides both classes as returned by the API, and also Input classes for creating objects.
 
 Classes:
+- RootAPI: Represents the data returned by the root endpoint.
 - AlbumAPI: Represents an album in the music database.
 - SongAPI: Represents a song in the music database.
 - ArtistAPI: Represents an artist in the music database.
@@ -12,7 +13,11 @@ Classes:
 
 """
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class RootAPI(BaseModel):
+    song_count: int = Field(..., alias="# of songs")
 
 
 class AlbumAPI(BaseModel):
