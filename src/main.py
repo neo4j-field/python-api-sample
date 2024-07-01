@@ -1,26 +1,32 @@
 """Application main file."""
-from fastapi import FastAPI, HTTPException
+from typing import List
 
+from fastapi import FastAPI, HTTPException
 from neomodel import DoesNotExist
+
 from .database_models import Artist, Song, Playlist
-from . import config
-from .api_models import AlbumAPI, ArtistAPI, PlaylistAPI, SongAPI, PlaylistInput
+from .api_models import (
+    AlbumAPI, ArtistAPI, PlaylistAPI, SongAPI, PlaylistInput, RootAPI
+)
+
 
 # Create app
 app = FastAPI(title="neomodel sample project")
 
 
 @app.get("/")
-async def root():
-    songs = Song.nodes.all()
-    return {"# of songs": len(songs)}
+async def root() -> RootAPI:
+    return RootAPI(song_count=len(Song.nodes))
 
 
 @app.get("/artists")
-async def get_artists(page_size: int = 10, page_number: int = 0):
-    artists = Artist.nodes.order_by("name")[
-        page_number * page_size : page_number * page_size + page_size
-    ]
+async def get_artists(
+    page_size: int = 10,
+    page_number: int = 0
+) -> List[ArtistAPI]:
+    from_ = page_number * page_size
+    to = from_ + page_size
+    artists = Artist.nodes.order_by("name")[from_:to]
     return [
         ArtistAPI(
             uid=a.uid,
@@ -51,7 +57,7 @@ async def get_artists(page_size: int = 10, page_number: int = 0):
 
 
 @app.get("/songs")
-async def get_song(song_uid: str):
+async def get_song(song_uid: str) -> SongAPI:
     song = Song.nodes.get(uid=song_uid)
     return SongAPI(
         uid=song.uid,
@@ -74,7 +80,7 @@ async def get_song(song_uid: str):
 
 
 @app.post("/playlists")
-async def create_playlist(input: PlaylistInput):
+async def create_playlist(input: PlaylistInput) -> PlaylistAPI:
     try:
         playlist = Playlist(
             title=input.title,
